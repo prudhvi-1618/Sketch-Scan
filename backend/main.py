@@ -13,7 +13,13 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 app = Flask(__name__)
-CORS(app)
+
+origins = [
+    "http://localhost:5173",  # Development
+    "https://sketch-scan.vercel.app/",  # Production (replace with actual Vercel URL)
+]
+
+CORS(app,origins=origins)
 
 
 @app.route('/')
@@ -70,7 +76,7 @@ def analyze_image(image):
         f"DO NOT USE BACKTICKS OR MARKDOWN FORMATTING. "
         f"PROPERLY QUOTE THE KEYS AND VALUES IN THE DICTIONARY FOR EASIER PARSING WITH Python's ast.literal_eval."
     )
-    
+
     response = client.models.generate_content(
         model="gemini-1.5-flash",
         contents=[prompt, image])
