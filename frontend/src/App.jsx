@@ -1,24 +1,24 @@
-import { useState,useLayoutEffect } from 'react'
+import { useState, useLayoutEffect, useRef } from 'react'
 import rough from 'roughjs'
 import { getStroke } from 'perfect-freehand'
 import { assets } from './assets/assets';
 
 const generator = rough.generator();
+const BASE_URL = "https://sketch-scan.vercel.app/";
 
-
-const createElement = (id,x1,y1,x2,y2,tool)=>{ 
-  switch(tool){
+const createElement = (id, x1, y1, x2, y2, tool) => {
+  switch (tool) {
     case "line":
-      var roughElement = generator.line(x1,y1,x2,y2);
-      return {id,tool,x1,y1,x2,y2,roughElement};
+      var roughElement = generator.line(x1, y1, x2, y2);
+      return { id, tool, x1, y1, x2, y2, roughElement };
     case "rectangle":
-      var roughElement =generator.rectangle(x1,y1,x2-x1,y2-y1);
-      return {id,tool,x1,y1,x2,y2,roughElement};
+      var roughElement = generator.rectangle(x1, y1, x2 - x1, y2 - y1);
+      return { id, tool, x1, y1, x2, y2, roughElement };
     case "circle":
-      var roughElement =generator.circle(x1,y1,2*(x2-x1+y2-y1));
-      return {id,tool,x1,y1,x2,y2,roughElement};
+      var roughElement = generator.circle(x1, y1, 2 * (x2 - x1 + y2 - y1));
+      return { id, tool, x1, y1, x2, y2, roughElement };
     case "pencil":
-      return {id,tool,points:[{x:x1,y:y1}]};
+      return { id, tool, points: [{ x: x1, y: y1 }] };
   }
 }
 
@@ -57,8 +57,8 @@ function getSvgPathFromStroke(points, closed = true) {
   return result
 };
 
-const drawElement = (roughCanvas,ctx,element)=>{
-  switch(element.tool){
+const drawElement = (roughCanvas, ctx, element) => {
+  switch (element.tool) {
     case "line":
     case "rectangle":
     case "circle":
@@ -66,38 +66,38 @@ const drawElement = (roughCanvas,ctx,element)=>{
       break;
     case "pencil":
       if (element.points && element.points.length > 0) {
-        const outlinePoints = getStroke(element.points,{
-          size:8,
-          thinning:0.7,
+        const outlinePoints = getStroke(element.points, {
+          size: 8,
+          thinning: 0.7,
         });
         const pathData = getSvgPathFromStroke(outlinePoints)
         const myPath = new Path2D(pathData)
         ctx.fill(myPath)
       }
-      
+
   }
 }
 
 function App() {
 
-  const [elements,SetElement] = useState([]);
-  const [drawing,SetDrawing] = useState(false);
-  // const [elementType,SetElementType] = useState("rectangle");
-  const [action, setAction] = useState("none");
+  const [elements, SetElement] = useState([]);
+  const [drawing, SetDrawing] = useState(false);
   const [tool, setTool] = useState("rectangle");
+  const [generatedText, SetGeneratedText] = useState([]);
 
-  useLayoutEffect(()=>{
+  const canvasRef = useRef(null);
+
+  useLayoutEffect(() => {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext('2d');
     const roughCanvas = rough.canvas(canvas);
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
-    // const rect = generator.rectangle(10,10,100,100);
-    // roughCanvas.draw(rect);
-    elements.forEach(element=> drawElement(roughCanvas,ctx,element));
+    elements.forEach(element => drawElement(roughCanvas, ctx, element));
     ctx.restore();
-  },[elements]);
+
+  }, [elements]);
 
   const updateElement = (id, x1, y1, x2, y2, type, options) => {
     const elementsCopy = [...elements];
@@ -108,7 +108,7 @@ function App() {
         elementsCopy[id] = createElement(id, x1, y1, x2, y2, tool);
         break;
       case "pencil":
-        if (!elementsCopy[id].points) elementsCopy[id].points = []; // Ensure points array exists
+        if (!elementsCopy[id].points) elementsCopy[id].points = [];
         elementsCopy[id].points.push({ x: x2, y: y2 });
         break;
     }
@@ -119,52 +119,93 @@ function App() {
   const handleMouseDown = (event) => {
     SetDrawing(true);
     const l = 85;
-    const {clientX,clientY} = event;
+    const { clientX, clientY } = event;
     const id = elements.length;
-    const element = createElement(id,clientX,clientY-l,clientX,clientY-l,tool);
-    SetElement((prevState)=>[...prevState,element]);
+    const element = createElement(id, clientX, clientY - l, clientX, clientY - l, tool);
+    SetElement((prevState) => [...prevState, element]);
   }
 
-  const handleMouseMove = (event)=>{
+  const handleMouseMove = (event) => {
 
-    if(!drawing) return;
-    const l =85;
+    if (!drawing) return;
+    const l = 85;
     const index = elements.length - 1;
-    const {x1,y1} = elements[index];
-    const {clientX,clientY} = event;
-    updateElement(index, x1, y1, clientX, clientY-l, tool);
-    
+    const { x1, y1 } = elements[index];
+    const { clientX, clientY } = event;
+    updateElement(index, x1, y1, clientX, clientY - l, tool);
+
   }
 
-  const handleMouseUp = (event) =>{
+  const handleMouseUp = (event) => {
     SetDrawing(false);
   }
 
-  return (
-    <div className='flex flex-col items-center bg-[#ececf4] overflow-hidden'>
-     <div className=" my-5 py-2 px-5 rounded-xl flex gap-5 bg-[#ffffff]" >
-      {["pencil","rectangle","line","circle"].map((element,index)=>{
-       return (  
-        <div key={index} className='cursor-pointer ' 
-          onClick={(e)=>setTool(element)}
-        >
-         <img  className="relative group p-2 rounded-lg hover:bg-[#f1f0ff]"
-         src= {assets[element] }  alt={element} width="40" height="40" />
-        </div>
-       )
-      })}
-      </div>  
-     <canvas 
-     id="canvas" 
-     className='' 
-     width={window.innerWidth} 
-     height={window.innerHeight - 100 }
-     onMouseDown={handleMouseDown}
-     onMouseMove={handleMouseMove}
-     onMouseUp={handleMouseUp}
-     >
+  const handleDownload = () => {
+    const canvas = canvasRef.current;
 
-     </canvas>
+    const imageBase64 = canvas.toDataURL('image/png');
+
+
+    fetch(BASE_URL + 'calculate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        image: imageBase64,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+
+        const k = data.value[0];
+        SetGeneratedText([k.expr, k.result]);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  };
+
+  return (
+    <div className='flex flex-col items-center bg-[#ececf4] '>
+      <div className=" my-5 py-2 px-5 rounded-xl flex gap-5 bg-[#ffffff]" >
+        {["pencil", "rectangle", "line", "circle"].map((element, index) => {
+          return (
+            <div key={index} className='cursor-pointer '
+              onClick={(e) => setTool(element)}
+            >
+              <img className="relative group p-2 rounded-lg hover:bg-[#f1f0ff]"
+                src={assets[element]} alt={element} width="40" height="40" />
+            </div>
+          )
+        })}
+        <div className=''
+          onClick={(e) => handleDownload()}
+        >
+          <button className="relative group p-2 rounded-lg border-2 cursor-pointer text-[#fff] bg-[#000000] hover:bg-[#fff] hover:text-[#000000]" width="40" height="40" >Generate Text</button>
+        </div>
+      </div>
+      <div className='flex'>
+        <canvas
+          id="canvas"
+          ref={canvasRef}
+          width={window.innerWidth}
+          height={window.innerHeight - 100}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+        >
+
+        </canvas>
+        {generatedText.length>0?(
+          <div className='absolute top-40 right-10 py-7 px-5 rounded-xl bg-[#ffffff] text-zinc-900 text-xl font-medium'>
+          <div className='inline-block pr-3' >{generatedText[0]}</div>
+          <div className='inline-block pr-3' > = </div>
+          <div className='inline-block' >{generatedText[1]}</div>
+         </div>
+        ):<div></div>}
+      </div>
     </div>
   )
 }
