@@ -137,10 +137,12 @@ function App() {
   }
 
   const handleMouseUp = (event) => {
+    event.preventDefault();
     SetDrawing(false);
   }
 
   const handleTouchStart = (event) => {
+    event.preventDefault();
     const l = 85;
     SetDrawing(true);
     const { clientX, clientY } = event.touches[0];  // Touch event (first touch point)
@@ -150,6 +152,7 @@ function App() {
   };
 
   const handleTouchMove = (event) => {
+    event.preventDefault();
     if (!drawing) return;
     const l = 85;
     const index = elements.length - 1;
