@@ -141,10 +141,11 @@ function App() {
   }
 
   const handleTouchStart = (event) => {
+    const l = 85;
     SetDrawing(true);
     const { clientX, clientY } = event.touches[0];  // Touch event (first touch point)
     const id = elements.length;
-    const element = createElement(id, clientX, clientY, clientX, clientY, tool);
+    const element = createElement(id, clientX, clientY - l, clientX, clientY - l, tool);
     SetElement((prevState) => [...prevState, element]);
   };
 
