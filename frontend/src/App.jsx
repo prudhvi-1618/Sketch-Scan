@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useRef } from 'react'
+import { useState, useLayoutEffect, useRef, useEffect } from 'react'
 import rough from 'roughjs'
 import { getStroke } from 'perfect-freehand'
 import { assets } from './assets/assets';
@@ -99,6 +99,21 @@ function App() {
 
   }, [elements]);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchcancel', handleTouchCancel, { passive: false });
+  
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+      canvas.removeEventListener('touchcancel', handleTouchCancel);
+    };
+  }, []);
+
   const updateElement = (id, x1, y1, x2, y2, type, options) => {
     const elementsCopy = [...elements];
     switch (type) {
@@ -161,6 +176,16 @@ function App() {
     updateElement(index, x1, y1, clientX, clientY - l, tool);
 }  
 
+const handleTouchEnd = (event) => {
+  event.preventDefault();
+  SetDrawing(false);
+}
+
+const handleTouchCancel = (event) => {
+  event.preventDefault();  
+};
+
+
   const handleDownload = () => {
     const canvas = canvasRef.current;
 
@@ -218,7 +243,7 @@ function App() {
           onMouseUp={handleMouseUp}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
-          onTouchEnd={handleMouseUp}
+          onTouchEnd={handleTouchEnd}
         >
 
         </canvas>
