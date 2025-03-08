@@ -140,6 +140,23 @@ function App() {
     SetDrawing(false);
   }
 
+  const handleTouchStart = (event) => {
+    SetDrawing(true);
+    const { clientX, clientY } = event.touches[0];  // Touch event (first touch point)
+    const id = elements.length;
+    const element = createElement(id, clientX, clientY, clientX, clientY, tool);
+    SetElement((prevState) => [...prevState, element]);
+  };
+
+  const handleTouchMove = (event) => {
+    if (!drawing) return;
+    const l = 85;
+    const index = elements.length - 1;
+    const { x1, y1 } = elements[index];
+    const { clientX, clientY } = event.touches[0];  // Touch event
+    updateElement(index, x1, y1, clientX, clientY - l, tool);
+}  
+
   const handleDownload = () => {
     const canvas = canvasRef.current;
 
@@ -195,6 +212,9 @@ function App() {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleMouseUp}
         >
 
         </canvas>
