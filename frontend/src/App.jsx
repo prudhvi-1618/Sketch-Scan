@@ -82,7 +82,7 @@ function App() {
 
   const [elements, SetElement] = useState([]);
   const [drawing, SetDrawing] = useState(false);
-  const [tool, setTool] = useState("rectangle");
+  const [tool, setTool] = useState("pencil");
   const [generatedText, SetGeneratedText] = useState([]);
 
   const canvasRef = useRef(null);
@@ -221,7 +221,7 @@ const handleTouchCancel = (event) => {
             <div key={index} className='cursor-pointer '
               onClick={(e) => setTool(element)}
             >
-              <img className="relative group p-2 rounded-lg hover:bg-[#f1f0ff]"
+              <img className={`relative group p-2 rounded-lg hover:bg-[#dddde3] ${tool===element?"bg-[#f1f0ff]":null}`}
                 src={assets[element]} alt={element} width="40" height="40" />
             </div>
           )
