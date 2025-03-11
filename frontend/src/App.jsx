@@ -82,7 +82,7 @@ function App() {
 
   const [elements, SetElement] = useState([]);
   const [drawing, SetDrawing] = useState(false);
-  const [tool, setTool] = useState("pencil");
+  const [tool, setTool] = useState("rectangle");
   const [generatedText, SetGeneratedText] = useState([]);
 
   const canvasRef = useRef(null);
